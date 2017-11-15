@@ -1,0 +1,209 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Список дел</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.0/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.6.15/browser.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="maindiv">
+      <h1>Список дел</h1>
+
+    <div id='content' class="mainlist"></div>
+    <div id='menu' class="menu"></div>
+  </div>
+
+
+    <script type="text/babel">
+
+   var Mass = [{
+     id:0,
+     goal:'Помыть посуду',
+     descr:'Скопилось много грязной посуды, нужно помыть',
+     prior:'Обычная',
+     date:'20.11.2017',
+     time:'20:00',
+     ddate:'15.11.2017',
+     dtime:'15:00',
+     flag:0,
+     done:false
+   },{
+     id:1,
+     goal:'Выучить английский язык',
+     descr:'21',
+     prior:'Важная',
+     date:'22.11.2017',
+     time:'20:00',
+     ddate:'14.11.2017',
+     dtime:'15:00',
+     flag:0,
+     done:false
+   }];
+
+
+    var Goal = React.createClass({
+      getInitialState:function(){
+        return {
+                flag:0,
+                fldone:false
+        };
+      },
+      onCheckBoxClick:function(event){
+        event.preventDefault();
+        //console.log(this.refs);
+        if(this.state.flag==0) {
+          event.target.checked = true;
+          this.setState({flag : 1});
+        }
+        else this.setState({flag:0});
+      },
+
+
+      CheckBoxValue:function(){
+        if(this.state.flag==0) return false;
+        else return true;
+      },
+      SetDone:function(){
+        this.setState({flag:this.state.flag,fldone:true})
+      },
+      GetClassNameTR: function(){
+        if(this.state.flag==0 && this.props.done==true) return 'done';
+        if(this.state.flag==0) return 'strok';
+        else return 'selected';
+      },
+      render: function() {
+        return (
+          <tbody ref ={this.props.goal} className={this.GetClassNameTR()}>
+          <tr>
+            <td>
+              <input type="checkbox" id="radiob" ref={this.props.id} checked={this.CheckBoxValue()} onClick={this.onCheckBoxClick}/>
+            </td>
+            <td className="yach">
+              {this.props.goal}
+            </td>
+            <td className="yach">
+              {this.props.descr}
+            </td>
+            <td className="yach">
+              {this.props.prior}
+            </td>
+            <td className="yach">
+              {this.props.date},{this.props.time}
+            </td>
+            <td className="yach">
+              {this.props.ddate},{this.props.dtime}
+            </td>
+          </tr></tbody>
+        );
+      }
+    });
+
+    var GoalList = React.createClass({
+      getInitialState:function(){
+        return{
+          displayedlist: Mass,//массив,которые отображаем
+          MainMass:Mass//весь массив
+        };
+      },
+
+      onSelectChange:function(event){
+        if(event.target.value=='0') {
+          var m=this.state.MainMass;
+          this.setState({displayedlist:m});
+        }
+        else{
+        var newMass=this.state.MainMass.filter(function(el){
+          if(el.prior==event.target.value) return el;
+        });
+        this.setState({displayedlist:newMass});
+      }
+      },
+
+
+      onAddClick:function(event){
+        event.preventDefault();
+        var obj = new Object();
+        obj.goal = this.refs['newgoal'].value;
+        obj.descr = this.refs['newdescr'].value;
+        obj.prior = this.refs['newprior'].value;
+        obj.time = this.refs['newtime'].value;
+        obj.date = this.refs['newdate'].value;
+        var newmass = this.state.MainMass;
+        obj.id = newmass[this.state.MainMass.length-1].id + 1;
+        newmass[this.state.MainMass.length]= obj;
+        this.setState({displayedlist:newmass,MainMass:newmass});
+      },
+
+      onDeleteClick:function(event){
+        event.preventDefault();
+        var arr= this.refs;
+        var newmass;
+        for(var p in arr){
+      //    console.log(arr[p].props.id);
+          if(arr[p].state.flag==1){
+            newmass = this.state.displayedlist.filter(function(el){
+              if(el.id!==arr[p].props.id) return el;
+            })
+            this.setState({displayedlist:newmass,MainMass:newmass});
+
+          }
+        }
+      },
+      onDoneClick:function(event){
+        event.preventDefault();
+      },
+      render: function(){
+        return (
+          <div>
+          <select ref='select' className="spis" onChange={this.onSelectChange}>
+            <option value="0">Все</option>
+            <option value="Обычная">Обычные</option>
+            <option value="Важная">Важные</option>
+            <option value="Очень важная">Очень важные</option>
+          </select>
+
+          <table className="tablo" >
+            {
+              this.state.displayedlist.map(function(el){
+                return <Goal ref={el.id} key={el.id}
+                              id={el.id}
+                              goal={el.goal}
+                              descr = {el.descr}
+                              prior={el.prior}
+                              date={el.date}
+                              time={el.time}
+                              ddate={el.ddate}
+                              dtime={el.dtime}
+                              />
+              })
+            }
+          </table>
+
+          <form className="menubut">
+          <input type="submit" value="Выполнено!" className="but"  onClick={this.onDoneClick} />
+          <input type="submit" value="Добавить" className="but"  onClick={this.onAddClick}/>
+          <input type="submit" value="Редактировать" className="but"/>
+          <input type="submit" value="Удалить" className="but" onClick={this.onDeleteClick}/>
+          </form>
+          <div>
+            <p>Новая задача:</p>
+            <input type="text" ref='newgoal' defaultValue="Новая задача..."/>
+            <input type="text" ref='newdescr' defaultValue="Описание..."/>
+            <input type="text" ref='newprior' defaultValue="Важность..."/>
+            <input type="text" ref='newtime' defaultValue="Время выполнения..."/>
+            <input type="text" ref='newdate' defaultValue="Дата выполнения..."/>
+          </div>
+          </div>
+        );
+      }
+    });
+
+    ReactDOM.render(
+      <GoalList/>,
+      document.getElementById('content')
+    );
+    </script>
+</body>
+</html>
